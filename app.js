@@ -2,6 +2,7 @@ let express = require("express");
 let app = express();
 let mongoose = require("mongoose");
 let Listing=require("./model/listing")
+let path=require("path")
 
 let MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 async function main() {
@@ -16,9 +17,17 @@ main()
     console.log(err);
   });
 
+app.set("view engine","ejs");
+app.set("views",path.join(__dirname,"views"))
+
 app.get("/", (req, res) => {
   res.send("Hi, i am root!!");
 });
+
+app.get("/allListings",async (req,res)=>{
+  let allListing=await Listing.find({});
+  res.render("../views/listings/index.ejs",{allListing})
+})
 
 app.get("/testListing",async (req,res)=>{
     let sampleListing= new Listing({
