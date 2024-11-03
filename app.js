@@ -34,6 +34,7 @@ app.get("/", (req, res) => {
 //index route
 app.get("/allListings",async (req,res)=>{
   let Listings=await Listing.find({});
+  console.log(Listings);
   res.render("listings/index.ejs",{Listings})
 })
 
@@ -61,6 +62,7 @@ res.render("listings/show.ejs",{listing})
 //create route
 app.post("/listings",async (req,res)=>{
  const newListing=new Listing(req.body.listing);
+ console.log(newListing);
  await newListing.save();
  res.redirect("/allListings")
 })

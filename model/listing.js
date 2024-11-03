@@ -9,10 +9,16 @@ const listingSchema = new schema({
   description: String,
   image: {
     type: Object,
-    default: defaultImg,
-    set: (v) => {
+    filename:String,
+    url:{
+      type:String,
+      default: defaultImg,
+      set: (v) => {
       return v === "" ? defaultImg : v;
     },
+    },
+    
+    
   },
   price: Number,
   location: String,
