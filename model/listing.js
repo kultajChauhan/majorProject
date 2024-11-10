@@ -2,23 +2,19 @@ const mongoose = require("mongoose");
 const schema = mongoose.Schema;
 
 const defaultImg =
-  "https://unsplash.com/photos/a-table-topped-with-lots-of-bowls-and-bowls-qSSKY76beCg";
+  "https://images.unsplash.com/photo-1679908731995-4ee6f1ceedbc?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const listingSchema = new schema({
   title: { type: String, required: true },
   description: String,
   image: {
-    type: Object,
-    filename:String,
-    url:{
-      type:String,
-      default: defaultImg,
+    filename: { type: String, default: "listingimage" },
+    url: {
+      type: String,
       set: (v) => {
-      return v === "" ? defaultImg : v;
+        return v === "" ? defaultImg : v;
+      },
     },
-    },
-    
-    
   },
   price: Number,
   location: String,
