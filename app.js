@@ -1,10 +1,12 @@
 let express = require("express");
 let app = express();
 let mongoose = require("mongoose");
-let Listing=require("./model/listing")
-let path=require("path");
-const methodOverride=require("method-override");
-const ejsMate=require('ejs-mate')
+let Listing = require("./model/listing");
+let path = require("path");
+const methodOverride = require("method-override");
+const ejsMate = require("ejs-mate");
+const wrapAsync = require("./utils/wrapAsync");
+const ExpressError = require("./utils/ExpressError");
 
 let MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 async function main() {
@@ -19,81 +21,113 @@ main()
     console.log(err);
   });
 
-app.set("view engine","ejs");
-app.set("views",path.join(__dirname,"views"));
-app.use(express.urlencoded({extended:true}));
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.engine('ejs', ejsMate);
-app.use(express.static(path.join(__dirname,"/public")));
-
+app.engine("ejs", ejsMate);
+app.use(express.static(path.join(__dirname, "/public")));
 
 app.get("/", (req, res) => {
   res.send("Hi, i am root!!");
 });
 
 //index route
-app.get("/allListings",async (req,res)=>{
-  let Listings=await Listing.find({});
-  console.log(Listings);
-  res.render("listings/index.ejs",{Listings})
-})
+app.get(
+  "/allListings",
+  wrapAsync(async (req, res) => {
+    let Listings = await Listing.find({});
+    res.render("listings/index.ejs", { Listings });
+  })
+);
 
 //new add form
-app.get("/listings/new",(req,res)=>{
-  res.render("listings/new.ejs")
-})
+app.get(
+  "/listings/new",
+  wrapAsync((req, res) => {
+    res.render("listings/new.ejs");
+  })
+);
 
 //delete route
-app.delete("/listings/:id/delete",async (req,res)=>{
-  let {id}=req.params;
-  const deletelisting=await Listing.findByIdAndDelete(id);
-console.log(deletelisting);
-res.redirect("/allListings");
-})
+app.delete(
+  "/listings/:id/delete",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    const deletelisting = await Listing.findByIdAndDelete(id);
+    console.log(deletelisting);
+    res.redirect("/allListings");
+  })
+);
 
 //show route
-app.get("/listing/:id",async (req,res)=>{
-let {id}=req.params;
-const listing=await Listing.findById(id);
-res.render("listings/show.ejs",{listing})
-});
-
+app.get(
+  "/listing/:id",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    const listing = await Listing.findById(id);
+    res.render("listings/show.ejs", { listing });
+  })
+);
 
 //create route
-app.post("/listings",async (req,res)=>{
- const newListing=new Listing(req.body.listing);
- console.log(newListing);
- await newListing.save();
- res.redirect("/allListings")
-})
+app.post(
+  "/listings",
+  wrapAsync(async (req, res) => {
+    if(!req.body.listing){
+      throw new ExpressError(400,"Send valid data for Listing");
+    };
+    const newListing = new Listing(req.body.listing);
+    await newListing.save();
+    res.redirect("/allListings");
+  })
+);
 
 //edit route
-app.get("/listing/:id/edit",async (req,res)=>{
-  let {id}=req.params;
-  const listing=await Listing.findById(id);
-  res.render("listings/edit.ejs",{listing})})
-
-  //update route
-  app.put("/listing/:id",async (req,res)=>{
-    let {id}=req.params;
-    await Listing.findByIdAndUpdate(id,{...req.body.listing});
-res.redirect(`/listing/${id}`);
+app.get(
+  "/listing/:id/edit",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    const listing = await Listing.findById(id);
+    res.render("listings/edit.ejs", { listing });
   })
+);
 
-  
+//update route
+app.put(
+  "/listing/:id",
+  wrapAsync(async (req, res) => {
+    let { id } = req.params;
+    await Listing.findByIdAndUpdate(id, { ...req.body.listing });
+    res.redirect(`/listing/${id}`);
+  })
+);
 
-app.get("/testListing",async (req,res)=>{
-    let sampleListing= new Listing({
-        title:"My New Villa",
-        description:"By the Beach",
-        price:1200,
-        location:"Calangute Goa",
-        country:"India",
+app.get(
+  "/testListing",
+  wrapAsync(async (req, res) => {
+    let sampleListing = new Listing({
+      title: "My New Villa",
+      description: "By the Beach",
+      price: 1200,
+      location: "Calangute Goa",
+      country: "India",
     });
 
     await sampleListing.save();
     console.log("sample was saved");
     res.send("successful testing");
+  })
+);
+
+app.all("*", (req, res, next) => {
+  next(new ExpressError(404, "page not found"));
+});
+
+app.use((err, req, res, next) => {
+  let { statusCode=500, message="something went wrong!!" } = err;
+  // res.status(statusCode).send(message);
+  res.status(statusCode).render("error.ejs",{message});
 });
 
 app.listen(8080, () => {
