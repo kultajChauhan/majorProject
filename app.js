@@ -7,8 +7,8 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync");
 const ExpressError = require("./utils/ExpressError");
-const {listingSchema}= require("./schema");
-
+const { listingSchema, reviewSchema } = require("./schema");
+const Review = require("./model/review");
 
 let MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 async function main() {
@@ -33,6 +33,26 @@ app.use(express.static(path.join(__dirname, "/public")));
 app.get("/", (req, res) => {
   res.send("Hi, i am root!!");
 });
+
+const validateListing = (req, res, next) => {
+  let { error } = listingSchema.validate(req.body);
+
+  if (error) {
+    throw new ExpressError(400, error);
+  } else {
+    next();
+  }
+};
+
+const validatereview = (req, res, next) => {
+  let { error } = reviewSchema.validate(req.body);
+
+  if (error) {
+    throw new ExpressError(400, error);
+  } else {
+    next();
+  }
+};
 
 //index route
 app.get(
@@ -67,17 +87,36 @@ app.get(
   "/listing/:id",
   wrapAsync(async (req, res) => {
     let { id } = req.params;
-    const listing = await Listing.findById(id);
+    const listing = await Listing.findById(id).populate("reviews");
     res.render("listings/show.ejs", { listing });
+  })
+);
+
+//review
+//post route
+app.post(
+  "/listings/:id/reviews",
+  validatereview,
+  wrapAsync(async (req, res) => {
+    let listing = await Listing.findById(req.params.id);
+    let newReview = new Review(req.body.review);
+    console.log(listing);
+    console.log(newReview);
+
+    listing.reviews.push(newReview);
+    console.log(listing);
+    await newReview.save();
+    await listing.save();
+
+    res.redirect(`/listing/${listing.id}`);
   })
 );
 
 //create route
 app.post(
   "/listings",
+  validateListing,
   wrapAsync(async (req, res) => {
-    let result=listingSchema.validate(req.body);
-    console.log(result);
     const newListing = new Listing(req.body.listing);
     await newListing.save();
     res.redirect("/allListings");
@@ -97,6 +136,7 @@ app.get(
 //update route
 app.put(
   "/listing/:id",
+  validateListing,
   wrapAsync(async (req, res) => {
     let { id } = req.params;
     await Listing.findByIdAndUpdate(id, { ...req.body.listing });
@@ -126,9 +166,9 @@ app.all("*", (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  let { statusCode=500, message="something went wrong!!" } = err;
+  let { statusCode = 500, message = "something went wrong!!" } = err;
   // res.status(statusCode).send(message);
-  res.status(statusCode).render("error.ejs",{message});
+  res.status(statusCode).render("error.ejs", { message });
 });
 
 app.listen(8080, () => {
