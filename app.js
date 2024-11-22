@@ -38,7 +38,7 @@ const validateListing = (req, res, next) => {
   let { error } = listingSchema.validate(req.body);
 
   if (error) {
-    throw new ExpressError(400, error);
+   return next(new ExpressError(400, error));
   } else {
     next();
   }
@@ -48,7 +48,7 @@ const validatereview = (req, res, next) => {
   let { error } = reviewSchema.validate(req.body);
 
   if (error) {
-    throw new ExpressError(400, error);
+    return next(new ExpressError(400, error)) ;
   } else {
     next();
   }
@@ -109,6 +109,19 @@ app.post(
     await listing.save();
 
     res.redirect(`/listing/${listing.id}`);
+  })
+);
+
+//delete review route
+app.delete(
+  "/listing/:id/review/:reviewId",
+  wrapAsync(async (req, res) => {
+    let { id, reviewId } = req.params;
+
+    await Listing.findByIdAndUpdate(id, { $pull: { reviews: reviewId } });
+    await Review.findByIdAndDelete(reviewId);
+
+    res.redirect(`/listing/${id}`);
   })
 );
 
