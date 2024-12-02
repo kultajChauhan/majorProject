@@ -8,14 +8,13 @@ const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync");
 const ExpressError = require("./utils/ExpressError");
 const { reviewSchema } = require("./schema");
-const listings=require("./routes/listing.js");
-const reviews=require("./routes/review.js");
-const session=require("express-session");
-const flash=require("connect-flash");
-const passport =require("passport");
-const LocalStrategy= require("passport-local");
+const listings = require("./routes/listing.js");
+const reviews = require("./routes/review.js");
+const session = require("express-session");
+const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
 const User = require("./model/user.js");
-
 
 let MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 async function main() {
@@ -37,15 +36,15 @@ app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate);
 app.use(express.static(path.join(__dirname, "/public")));
 
-const sessionOptions ={
-  ssecret:"mysupersecretcode",
+const sessionOptions = {
+  ssecret: "mysupersecretcode",
   resave: false,
-  saveUninitialized:true,
-  cookies:{
-    expires: Date.now() + 7*24*60*60*1000,
-    maxAge: 7*24*60*60*1000,
-    httpOnly:true,
-  }
+  saveUninitialized: true,
+  cookies: {
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+  },
 };
 
 app.get("/", (req, res) => {
@@ -62,27 +61,33 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-app.use((req,res,next)=>{
-  res.locals.success=req.flash("success");
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
   next();
-})
+});
 
+app.get("/demouser", async (req, res) => {
+  let fakeUser = new User({
+    email: "student@gmaial.com",
+    username: "delta-student",
+  });
 
+  let registeredUser = await User.register(fakeUser, "helloworld");
+  res.send(registeredUser);
+});
 
 const validatereview = (req, res, next) => {
   let { error } = reviewSchema.validate(req.body);
 
   if (error) {
-    return next(new ExpressError(400, error)) ;
+    return next(new ExpressError(400, error));
   } else {
     next();
   }
 };
 
-
-
-app.use("/listings",listings);
-app.use("/listings/:id/reviews",reviews);
+app.use("/listings", listings);
+app.use("/listings/:id/reviews", reviews);
 
 app.get(
   "/testListing",
