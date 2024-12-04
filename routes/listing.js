@@ -5,6 +5,7 @@ const { listingSchema, reviewSchema } = require("../schema");
 const ExpressError = require("../utils/ExpressError");
 let Listing = require("../model/listing");
 const { isLoggedin } = require("../middleware.js");
+const listingController = require("../controller/listing.js");
 
 const validateListing = (req, res, next) => {
   let { error } = listingSchema.validate(req.body);
@@ -17,13 +18,7 @@ const validateListing = (req, res, next) => {
 };
 
 //index route
-router.get(
-  "/",
-  wrapAsync(async (req, res) => {
-    let Listings = await Listing.find({});
-    res.render("listings/index.ejs", { Listings });
-  })
-);
+router.get("/", wrapAsync(listingController.index));
 
 //new add form
 router.get(
