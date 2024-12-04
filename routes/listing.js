@@ -24,63 +24,39 @@ router.get("/", wrapAsync(listingController.index));
 router.get(
   "/new",
   isLoggedin,
-  wrapAsync((req, res) => {
-    res.render("listings/new.ejs");
-  })
+  wrapAsync(listingController.newForm)
 );
 
 //delete route
 router.delete(
   "/:id/delete",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    const deletelisting = await Listing.findByIdAndDelete(id);
-    console.log(deletelisting);
-    res.redirect("/allListings");
-  })
+  wrapAsync(listingController.delete)
 );
 
 //show route
 router.get(
   "/:id",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    const listing = await Listing.findById(id).populate("reviews");
-    res.render("listings/show.ejs", { listing });
-  })
+  wrapAsync(listingController.show)
 );
 
 //create route
 router.post(
   "/",
   validateListing,
-  wrapAsync(async (req, res) => {
-    const newListing = new Listing(req.body.listing);
-    await newListing.save();
-    req.flash("success", "New listing created!");
-    res.redirect("/allListings");
-  })
+  wrapAsync(listingController.create)
 );
 
 //edit route
 router.get(
   "/listing/:id/edit",
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    const listing = await Listing.findById(id);
-    res.render("listings/edit.ejs", { listing });
-  })
+  wrapAsync(listingController.edit)
 );
 
 //update route
 router.put(
   "/listing/:id",
   validateListing,
-  wrapAsync(async (req, res) => {
-    let { id } = req.params;
-    await Listing.findByIdAndUpdate(id, { ...req.body.listing });
-    res.redirect(`/listing/${id}`);
-  })
+  wrapAsync(listingController.update)
 );
 
 module.exports = router;
