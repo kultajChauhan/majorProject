@@ -6,8 +6,10 @@ const ExpressError = require("../utils/ExpressError");
 let Listing = require("../model/listing");
 const { isLoggedin } = require("../middleware.js");
 const listingController = require("../controller/listing.js");
-const multer  = require('multer')
-const upload = multer({ dest: 'uploads/' })
+const multer  = require('multer');
+const {storage}=require("../cloudConfig.js");
+const upload = multer(storage);
+
 
 const validateListing = (req, res, next) => {
   let { error } = listingSchema.validate(req.body);
