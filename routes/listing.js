@@ -17,40 +17,24 @@ const validateListing = (req, res, next) => {
   }
 };
 
-//index route
-router.get("/", wrapAsync(listingController.index));
+router
+  .route("/")
+  //index route
+  .get( wrapAsync(listingController.index))
+  //create route
+  .post( validateListing, wrapAsync(listingController.create));
 
 //new add form
-router.get(
-  "/new",
-  isLoggedin,
-  wrapAsync(listingController.newForm)
-);
+router.get("/new", isLoggedin, wrapAsync(listingController.newForm));
 
 //delete route
-router.delete(
-  "/:id/delete",
-  wrapAsync(listingController.delete)
-);
+router.delete("/:id/delete", wrapAsync(listingController.delete));
 
 //show route
-router.get(
-  "/:id",
-  wrapAsync(listingController.show)
-);
-
-//create route
-router.post(
-  "/",
-  validateListing,
-  wrapAsync(listingController.create)
-);
+router.get("/:id", wrapAsync(listingController.show));
 
 //edit route
-router.get(
-  "/listing/:id/edit",
-  wrapAsync(listingController.edit)
-);
+router.get("/listing/:id/edit", wrapAsync(listingController.edit));
 
 //update route
 router.put(
