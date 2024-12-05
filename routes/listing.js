@@ -6,6 +6,8 @@ const ExpressError = require("../utils/ExpressError");
 let Listing = require("../model/listing");
 const { isLoggedin } = require("../middleware.js");
 const listingController = require("../controller/listing.js");
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
 
 const validateListing = (req, res, next) => {
   let { error } = listingSchema.validate(req.body);
@@ -22,7 +24,10 @@ router
   //index route
   .get( wrapAsync(listingController.index))
   //create route
-  .post( validateListing, wrapAsync(listingController.create));
+  // .post( validateListing, wrapAsync(listingController.create));
+  .post(upload.single('listing[image]'),(req,res)=>{
+res.send(req.file);
+  })
 
 //new add form
 router.get("/new", isLoggedin, wrapAsync(listingController.newForm));
