@@ -35,6 +35,12 @@ module.exports.index = async (req, res) => {
   module.exports.edit=async (req, res) => {
     let { id } = req.params;
     const listing = await Listing.findById(id);
+    if(!listing){
+      req.flash("error","Listing you requested for does not exit!")
+    }
+
+    let originalImageUrl =listing.image.url;
+    originalImageUrl=originalImageUrl.replace("/upload","/upload/h_300,w_250");
     res.render("listings/edit.ejs", { listing });
   }
 
@@ -48,7 +54,7 @@ module.exports.index = async (req, res) => {
     listing.image={url,filename};
     await listing.save();
     }
-    
+
     req.flash("success","Listing updated!");
     res.redirect(`/listing/${id}`);
   }
